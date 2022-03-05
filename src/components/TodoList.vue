@@ -2,40 +2,67 @@
 import { DeleteOutlined, CheckOutlined, CheckCircleFilled, ToTopOutlined } from '@ant-design/icons-vue';
 import { Input } from "ant-design-vue";
 import { ref } from "vue";
+import service from "@/service";
+import { getUserKey } from '@/service/auth';
 
 // 创建一个引用变量，用于绑定 Todo List 数据
 const todoList = ref<{
-  title: string,
-  is_completed: boolean,
-  is_top: boolean
+  id: string;
+  title: string;
+  is_completed: boolean;
+  is_top: boolean;
 }[]>([]);
+// 初始化 todo list
+const getTodoList = async () => {
+  const reply = await service.get('/todo/get-todo-list', { params: { key: getUserKey() } });
+  todoList.value = reply.data.data;
+}
+getTodoList();
+
 // 删除、完成、置顶的逻辑都与 todoList 放在同一个地方，这样对于逻辑关注点就更加聚焦了
-const onDeleteItem = (index: number) => {
+const onDeleteItem = async (index: number) => {
+  const id = todoList.value[index].id;
+  await service.post('/todo/delete', { id });
+
   todoList.value.splice(index, 1);
 }
-const onCompleteItem = (index: number) => {
+const onCompleteItem = async (index: number) => {
+  const id = todoList.value[index].id;
+  await service.post('/todo/complete', { id });
+
   todoList.value[index].is_completed = true;
   // 重新排序，将已经完成的项目往后排列
   const todoItem = todoList.value.splice(index, 1);
   todoList.value.push(todoItem[0]);
 }
-const onTopItem = (index: number) => {
+const onTopItem = async (index: number) => {
+  const id = todoList.value[index].id;
+  await service.post('/todo/top', { id });
+
   todoList.value[index].is_top = true;
   // 重新排序，将已经完成的项目往前排列
   const todoItem = todoList.value.splice(index, 1);
   todoList.value.unshift(todoItem[0]);
 }
 
+// 新增 Todo Item 的逻辑都放在一处
 // 创建一个引用变量，用于绑定输入框
 const todoText = ref('');
-const onTodoInputEnter = () => {
-  // 将 todo item 添加到 todoList 中
-  todoList.value.unshift({
-    title: todoText.value,
-    is_completed: false,
-    is_top: false
-  });
-  // 添加到 todoList 后，清空 todoText 的值
+const addTodoItem = () => {
+  // 新增一个 TodoItem，请求新增接口
+  const todoItem = {
+    key: getUserKey(),
+    title: todoText.value
+  }
+  return service.post('/todo/add', todoItem);
+}
+const onTodoInputEnter = async () => {
+  if (todoText.value === '') return;
+
+  await addTodoItem();
+  await getTodoList();
+
+  // 添加成功后，清空 todoText 的值
   todoText.value = '';
 }
 </script>

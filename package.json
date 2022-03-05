@@ -7,7 +7,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@types/uuid": "^8.3.4",
     "ant-design-vue": "^2.2.8",
+    "axios": "^0.25.0",
+    "uuid": "^8.3.2",
     "vue": "^3.2.25"
   },
   "devDependencies": {
